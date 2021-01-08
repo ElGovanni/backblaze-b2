@@ -56,11 +56,10 @@ class Client
      * @param array $options
      *
      * @throws ValidationException
+     * @throws GuzzleException     If the request fails.
+     * @throws B2Exception         If the B2 server replies with an error.
      *
      * @return Bucket
-     *
-     * @throws GuzzleException If the request fails.
-     * @throws B2Exception     If the B2 server replies with an error.
      */
     public function createBucket(array $options)
     {
@@ -85,11 +84,10 @@ class Client
      * @param array $options
      *
      * @throws ValidationException
+     * @throws GuzzleException     If the request fails.
+     * @throws B2Exception         If the B2 server replies with an error.
      *
      * @return Bucket
-     *
-     * @throws GuzzleException If the request fails.
-     * @throws B2Exception     If the B2 server replies with an error.
      */
     public function updateBucket(array $options)
     {
@@ -115,10 +113,10 @@ class Client
     /**
      * Returns a list of bucket objects representing the buckets on the account.
      *
-     * @return array
-     *
      * @throws GuzzleException If the request fails.
      * @throws B2Exception     If the B2 server replies with an error.
+     *
+     * @return array
      */
     public function listBuckets()
     {
@@ -140,10 +138,10 @@ class Client
      *
      * @param array $options
      *
-     * @return bool
-     *
      * @throws GuzzleException If the request fails.
      * @throws B2Exception     If the B2 server replies with an error.
+     *
+     * @return bool
      */
     public function deleteBucket(array $options)
     {
@@ -164,10 +162,10 @@ class Client
      *
      * @param array $options
      *
-     * @return File
-     *
      * @throws GuzzleException If the request fails.
      * @throws B2Exception     If the B2 server replies with an error.
+     *
+     * @return File
      */
     public function upload(array $options)
     {
@@ -214,7 +212,7 @@ class Client
             $options['FileContentType'] = 'b2/x-auto';
         }
 
-        $response = $this->client->request('POST', $uploadEndpoint, [
+        $response = $this->client->guzzleRequest('POST', $uploadEndpoint, [
             'headers' => [
                 'Authorization'                      => $uploadAuthToken,
                 'Content-Type'                       => $options['FileContentType'],
@@ -266,7 +264,7 @@ class Client
 
         $this->authorizeAccount();
 
-        $response = $this->client->request('GET', $requestUrl, $requestOptions, false);
+        $response = $this->client->guzzleRequest('GET', $requestUrl, $requestOptions, false);
 
         return isset($options['SaveAs']) ? true : $response;
     }
@@ -276,10 +274,10 @@ class Client
      *
      * @param array $options
      *
-     * @return array
-     *
      * @throws GuzzleException If the request fails.
      * @throws B2Exception     If the B2 server replies with an error.
+     *
+     * @return array
      */
     public function listFiles(array $options)
     {
@@ -354,11 +352,10 @@ class Client
      *
      * @throws GuzzleException
      * @throws NotFoundException If no file id was provided and BucketName + FileName does not resolve to a file, a NotFoundException is thrown.
+     * @throws GuzzleException   If the request fails.
+     * @throws B2Exception       If the B2 server replies with an error.
      *
      * @return File
-     *
-     * @throws GuzzleException If the request fails.
-     * @throws B2Exception     If the B2 server replies with an error.
      */
     public function getFile(array $options)
     {
@@ -394,11 +391,10 @@ class Client
      *
      * @throws GuzzleException
      * @throws NotFoundException
+     * @throws GuzzleException   If the request fails.
+     * @throws B2Exception       If the B2 server replies with an error.
      *
      * @return bool
-     *
-     * @throws GuzzleException If the request fails.
-     * @throws B2Exception     If the B2 server replies with an error.
      */
     public function deleteFile(array $options)
     {
@@ -431,7 +427,7 @@ class Client
             return;
         }
 
-        $response = $this->client->request('GET', self::B2_API_BASE_URL.self::B2_API_V1.'/b2_authorize_account', [
+        $response = $this->client->guzzleRequest('GET', self::B2_API_BASE_URL.self::B2_API_V1.'/b2_authorize_account', [
             'auth' => [$this->accountId, $this->applicationKey],
         ]);
 
@@ -552,10 +548,10 @@ class Client
      * @param $contentType
      * @param $bucketId
      *
-     * @return mixed
-     *
      * @throws GuzzleException If the request fails.
      * @throws B2Exception     If the B2 server replies with an error.
+     *
+     * @return mixed
      */
     protected function startLargeFile($fileName, $contentType, $bucketId)
     {
@@ -571,10 +567,10 @@ class Client
      *
      * @param $fileId
      *
-     * @return mixed
-     *
      * @throws GuzzleException If the request fails.
      * @throws B2Exception     If the B2 server replies with an error.
+     *
+     * @return mixed
      */
     protected function getUploadPartUrl($fileId)
     {
@@ -618,7 +614,7 @@ class Client
             array_push($sha1_of_parts, sha1($data_part));
             fseek($file_handle, $total_bytes_sent);
 
-            $response = $this->client->request('POST', $uploadUrl, [
+            $response = $this->client->guzzleRequest('POST', $uploadUrl, [
                 'headers' => [
                     'Authorization'                      => $largeFileAuthToken,
                     'Content-Length'                     => $bytes_sent_for_part,
@@ -646,10 +642,10 @@ class Client
      * @param       $fileId
      * @param array $sha1s
      *
-     * @return File
-     *
      * @throws GuzzleException If the request fails.
      * @throws B2Exception     If the B2 server replies with an error.
+     *
+     * @return File
      */
     protected function finishLargeFile($fileId, array $sha1s)
     {
@@ -678,16 +674,16 @@ class Client
      * @param string $route
      * @param array  $json
      *
-     * @return mixed
-     *
      * @throws GuzzleException If the request fails.
      * @throws B2Exception     If the B2 server replies with an error.
+     *
+     * @return mixed
      */
     protected function sendAuthorizedRequest($method, $route, $json = [])
     {
         $this->authorizeAccount();
 
-        return $this->client->request($method, $this->apiUrl.$route, [
+        return $this->client->guzzleRequest($method, $this->apiUrl.$route, [
             'headers' => [
                 'Authorization' => $this->authToken,
             ],
